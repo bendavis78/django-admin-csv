@@ -38,6 +38,13 @@ class CSVMixin(object):
     def get_csv_filename(self, request):
         return unicode(self.model._meta.verbose_name_plural)
 
+    def changelist_view(self, request, extra_context=None):
+        context = {
+            'querystring': request.GET.urlencode()
+        }
+        context.update(extra_context or {})
+        return super(CSVMixin, self).changelist_view(request, context)
+
     def csv_export(self, request, *args, **kwargs):
         import csv
         from django.http import HttpResponse
@@ -54,12 +61,10 @@ class CSVMixin(object):
                        for f in fields)
         writer.writerow(headers)
 
-        # Get the queryset using the preserved filters
-        queryset = self.get_queryset(request)
-        preserved_filters = request.GET.get('_changelist_filters')
-        qs = urlparse.parse_qs(preserved_filters)
-        search_term = ' '.join(qs.get(SEARCH_VAR))
-        queryset, _ = self.get_search_results(request, queryset, search_term)
+        # Get the queryset using the changelist
+        cl_response = self.changelist_view(request)
+        cl = cl_response.context_data.get('cl')
+        queryset = cl.get_queryset(request)
 
         # Write records.
         if self.csv_record_limit:

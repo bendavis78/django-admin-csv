@@ -5,6 +5,6 @@
   {{ block.super }}
   <li>
       {% url cl.opts|admin_urlname:'csvdownload' as download_url %}
-      <a href="{% add_preserved_filters download_url %}" class="link">Download CSV</a>
+      <a href="{{ download_url }}{% if querystring %}?{{ querystring }}{% endif %}" class="link">Download CSV</a>
   </li>
 {% endblock %}
