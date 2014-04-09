@@ -1,3 +1,4 @@
+import urlparse
 from functools import update_wrapper
 
 from django.contrib.admin.utils import label_for_field
@@ -34,14 +35,17 @@ class CSVMixin(object):
         ]
         return urlpatterns + super(CSVMixin, self).get_urls()
 
+    def get_csv_filename(self, request):
+        return unicode(self.model._meta.verbose_name_plural)
+
     def csv_export(self, request, *args, **kwargs):
         import csv
         from django.http import HttpResponse
-        from django.template.defaultfilters import slugify
 
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename=%s.csv' \
-            % slugify(self.model.__name__)
+        response['Content-Disposition'] = (
+            'attachment; filename={0}.csv'.format(
+                self.get_csv_filename(request)))
         fields = list(self.get_csv_fields(request))
         writer = csv.DictWriter(response, fields)
 
@@ -50,9 +54,11 @@ class CSVMixin(object):
                        for f in fields)
         writer.writerow(headers)
 
-        # Get the queryset
+        # Get the queryset using the preserved filters
         queryset = self.get_queryset(request)
-        search_term = request.GET.get(SEARCH_VAR, '')
+        preserved_filters = request.GET.get('_changelist_filters')
+        qs = urlparse.parse_qs(preserved_filters)
+        search_term = ' '.join(qs.get(SEARCH_VAR))
         queryset, _ = self.get_search_results(request, queryset, search_term)
 
         # Write records.
