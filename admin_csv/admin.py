@@ -1,8 +1,6 @@
-import urlparse
 from functools import update_wrapper
 
 from django.contrib.admin.utils import label_for_field
-from django.contrib.admin.views.main import SEARCH_VAR
 
 
 class CSVMixin(object):
@@ -16,6 +14,7 @@ class CSVMixin(object):
     # Exporting massive numbers of records should be done asynchronously.
     csv_record_limit = None
     csv_fields = []
+    csv_headers = {}
 
     def get_csv_fields(self, request):
         return self.csv_fields or self.list_display
@@ -45,6 +44,11 @@ class CSVMixin(object):
         context.update(extra_context or {})
         return super(CSVMixin, self).changelist_view(request, context)
 
+    def csv_header_for_field(self, field_name):
+        if self.headers.get(field_name):
+            return self.headers[field_name]
+        return label_for_field(field_name, self.model, self)
+
     def csv_export(self, request, *args, **kwargs):
         import csv
         from django.http import HttpResponse
@@ -57,8 +61,7 @@ class CSVMixin(object):
         writer = csv.DictWriter(response, fields)
 
         # Write header row.
-        headers = dict((f, label_for_field(f, self.model, self))
-                       for f in fields)
+        headers = dict((f, self.csv_header_for_field(f)) for f in fields)
         writer.writerow(headers)
 
         # Get the queryset using the changelist
