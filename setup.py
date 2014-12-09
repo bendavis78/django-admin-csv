@@ -1,13 +1,22 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
+
+version = '0.2'
+name = 'django-admin-csv'
 
 setup(
-    name='django-admin-csv',
-    version='0.1-dev',
+    name=name,
+    version=version,
     test_suite='admin_csv.test',
-    moddules=['admin_csv.py'],
     install_requires=[],
+    packages=find_packages(),
     package_data={'admin_csv': ['*.html']},
     include_package_data=True,
-    license='Creative Commons Attribution-Noncommercial-Share Alike license',
+    author='Ben Davis',
+    keywords=['django', 'admin', 'csv'],
+    author_email='bendavis78@gmail.com',
+    license='MIT',
+    url='https://github.com/bendavis78/' + name,
+    download_url=('https://github.com/bendavis78/' + name + '/tarball/' +
+                  version),
     long_description=open('README.rst').read(),
 )
