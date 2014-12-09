@@ -1,6 +1,7 @@
 from functools import update_wrapper
 
 from django.contrib.admin.utils import label_for_field
+from django.utils.six import text_type
 
 
 class CSVMixin(object):
@@ -35,7 +36,7 @@ class CSVMixin(object):
         return urlpatterns + super(CSVMixin, self).get_urls()
 
     def get_csv_filename(self, request):
-        return unicode(self.model._meta.verbose_name_plural)
+        return text_type(self.model._meta.verbose_name_plural)
 
     def changelist_view(self, request, extra_context=None):
         context = {
@@ -45,8 +46,8 @@ class CSVMixin(object):
         return super(CSVMixin, self).changelist_view(request, context)
 
     def csv_header_for_field(self, field_name):
-        if self.headers.get(field_name):
-            return self.headers[field_name]
+        if self.csv_headers.get(field_name):
+            return self.csv_headers[field_name]
         return label_for_field(field_name, self.model, self)
 
     def csv_export(self, request, *args, **kwargs):
